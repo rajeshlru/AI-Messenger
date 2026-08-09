@@ -11,12 +11,16 @@ const fileRoutes = require("./src/routes/fileRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();
-
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (origin === "http://localhost:3000") {
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://rajesh-ai-messenger.netlify.app",
+  ];
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
 
     res.setHeader(
       "Access-Control-Allow-Methods",
