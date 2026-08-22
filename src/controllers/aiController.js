@@ -8,6 +8,45 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+const AI_MODELS = [
+  "llama-3.3-70b-versatile",
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+];
+
+const generateWithFallback = async (messages, temperature = 0.7) => {
+  let lastError = null;
+
+  for (const model of AI_MODELS) {
+    try {
+      console.log(`Trying AI model: ${model}`);
+
+      const completion = await groq.chat.completions.create({
+        messages,
+        model,
+        temperature,
+        max_tokens: 1000,
+      });
+
+      console.log(`AI response generated using: ${model}`);
+
+      return completion;
+    } catch (error) {
+      lastError = error;
+
+      console.error(`Model failed: ${model}`);
+
+      console.error(
+        error?.error?.message || error?.message || "Unknown AI model error",
+      );
+
+      console.log("Trying next AI model...");
+    }
+  }
+
+  throw lastError;
+};
+
 const createDisplayTitle = (content) => {
   if (!content || !content.trim()) {
     return "New conversation";
@@ -143,12 +182,7 @@ ${fileContext}
       });
     });
 
-    const completion = await groq.chat.completions.create({
-      messages: messages,
-      model: "llama-3.1-8b-instant",
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    const completion = await generateWithFallback(messages, 0.7);
 
     const aiContent = completion.choices[0].message.content;
 
@@ -266,12 +300,7 @@ ${fileContext}
       }
     }
 
-    const completion = await groq.chat.completions.create({
-      messages: messagesForAI,
-      model: "llama-3.1-8b-instant",
-      temperature: 0.9,
-      max_tokens: 1000,
-    });
+    const completion = await generateWithFallback(messagesForAI, 0.9);
 
     const aiContent = completion.choices[0].message.content;
 
