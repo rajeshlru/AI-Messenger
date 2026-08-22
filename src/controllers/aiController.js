@@ -14,8 +14,56 @@ const AI_MODELS = [
   "openai/gpt-oss-20b",
   "groq/compound",
   "groq/compound-mini",
-  "qwen/qwen3.6-27b",
 ];
+
+const VISION_MODELS = [
+  "qwen/qwen3.6-27b",
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "meta-llama/llama-4-maverick-17b-128e-instruct",
+];
+
+const generateVisionWithFallback = async (messages, temperature = 0.7) => {
+  let lastError = null;
+
+  for (const model of VISION_MODELS) {
+    try {
+      console.log(`Trying vision model: ${model}`);
+
+      const completion = await groq.chat.completions.create({
+        messages,
+        model,
+        temperature,
+        max_tokens: 1000,
+      });
+
+      console.log(`Vision response generated using: ${model}`);
+
+      return completion;
+    } catch (error) {
+      lastError = error;
+
+      console.error(`Vision model failed: ${model}`);
+
+      console.error(
+        error?.error?.message || error?.message || "Unknown vision model error",
+      );
+
+      console.log("Trying next vision model...");
+    }
+  }
+
+  throw lastError;
+};
+
+const createImageDataUrl = (file) => {
+  if (!file?.fileData || !file?.mimeType) {
+    return null;
+  }
+
+  const base64 = Buffer.from(file.fileData).toString("base64");
+
+  return `data:${file.mimeType};base64,${base64}`;
+};
 
 const generateWithFallback = async (messages, temperature = 0.7) => {
   let lastError = null;
@@ -120,10 +168,11 @@ const generateAIResponse = async (req, res) => {
     const uploadedFiles = await UploadedFile.find({
       conversation: conversationId,
       user: req.user,
-    }).sort({
-      createdAt: 1,
-    });
-
+    })
+      .select("+fileData")
+      .sort({
+        createdAt: 1,
+      });
     const userMessage = await Message.create({
       conversation: conversationId,
       user: req.user,
@@ -147,7 +196,11 @@ const generateAIResponse = async (req, res) => {
       .limit(20);
 
     const fileContext = createFileContext(uploadedFiles);
+    const imageFiles = uploadedFiles.filter((file) =>
+      file.mimeType?.startsWith("image/"),
+    );
 
+    const hasImages = imageFiles.length > 0;
     const messages = [];
 
     if (fileContext) {
@@ -178,14 +231,46 @@ ${fileContext}
       });
     }
 
-    previousMessages.forEach((message) => {
-      messages.push({
-        role: message.role,
-        content: message.content,
-      });
+    previousMessages.forEach((message, index) => {
+      const isLastUserMessage =
+        message.role === "user" && index === previousMessages.length - 1;
+
+      if (isLastUserMessage && hasImages) {
+        const content = [
+          {
+            type: "text",
+            text: message.content,
+          },
+        ];
+
+        imageFiles.slice(0, 5).forEach((file) => {
+          const imageDataUrl = createImageDataUrl(file);
+
+          if (imageDataUrl) {
+            content.push({
+              type: "image_url",
+              image_url: {
+                url: imageDataUrl,
+              },
+            });
+          }
+        });
+
+        messages.push({
+          role: "user",
+          content,
+        });
+      } else {
+        messages.push({
+          role: message.role,
+          content: message.content,
+        });
+      }
     });
 
-    const completion = await generateWithFallback(messages, 0.7);
+    const completion = hasImages
+      ? await generateVisionWithFallback(messages, 0.7)
+      : await generateWithFallback(messages, 0.7);
 
     const aiContent = completion.choices[0].message.content;
 

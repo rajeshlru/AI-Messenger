@@ -67,7 +67,7 @@ const upload = multer({
   storage,
 
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 3 * 1024 * 1024,
   },
 
   fileFilter: (req, file, cb) => {
@@ -153,7 +153,6 @@ const uploadFile = async (req, res) => {
         message: "Conversation not found.",
       });
     }
-
     const extractedText = await extractText(req.file);
 
     const isImage = req.file.mimetype.startsWith("image/");
@@ -171,9 +170,13 @@ const uploadFile = async (req, res) => {
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       size: req.file.size,
-      extractedText: extractedText.trim(),
-    });
 
+      extractedText: extractedText.trim(),
+
+      ...(isImage && {
+        fileData: req.file.buffer,
+      }),
+    });
     conversation.updatedAt = new Date();
 
     await conversation.save();

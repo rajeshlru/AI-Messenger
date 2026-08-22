@@ -33,6 +33,12 @@ const uploadedFileSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // Store original image bytes for vision models
+    fileData: {
+      type: Buffer,
+      select: false,
+    },
   },
   {
     timestamps: true,
