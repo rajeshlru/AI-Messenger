@@ -9,9 +9,12 @@ const groq = new Groq({
 });
 
 const AI_MODELS = [
-  "llama-3.3-70b-versatile",
   "openai/gpt-oss-120b",
+  "llama-3.3-70b-versatile",
   "openai/gpt-oss-20b",
+  "groq/compound",
+  "groq/compound-mini",
+  "qwen/qwen3.6-27b",
 ];
 
 const generateWithFallback = async (messages, temperature = 0.7) => {
