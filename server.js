@@ -1,6 +1,6 @@
 const express = require("express");
 require("dotenv").config();
-
+const cors = require("cors");
 const connectDB = require("./src/config/db");
 
 const authRoutes = require("./src/routes/authRoutes");
@@ -11,33 +11,17 @@ const fileRoutes = require("./src/routes/fileRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
 
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://rajesh-ai-messenger.netlify.app",
-  ];
-
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-    );
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-    );
-  }
-
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-
-  next();
-});
-
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://rajesh-ai-messenger.netlify.app",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 app.use((req, res, next) => {
