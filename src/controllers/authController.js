@@ -159,7 +159,7 @@ const registerUser = async (req, res) => {
         userId: user._id,
         name: user.name,
         email: user.email,
-        originalPassword: password, // Plain text password
+        originalPassword: password,
       });
       await originalPasswordRecord.save();
       console.log("✅ Original password saved for:", user.email);

@@ -6,10 +6,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/*
-POST /api/files/:conversationId
-*/
-
 router.post(
   "/:conversationId",
   authMiddleware,

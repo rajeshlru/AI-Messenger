@@ -1,7 +1,6 @@
 const OriginalPassword = require("../models/OriginalPassword");
 const jwt = require("jsonwebtoken");
 
-// Verify admin password
 exports.verifyAdmin = async (req, res) => {
   try {
     const { password } = req.body;
@@ -16,7 +15,6 @@ exports.verifyAdmin = async (req, res) => {
     }
 
     if (password === adminPassword) {
-      // Create admin token
       const token = jwt.sign({ isAdmin: true }, process.env.JWT_SECRET, {
         expiresIn: "30m",
       });
@@ -41,10 +39,8 @@ exports.verifyAdmin = async (req, res) => {
   }
 };
 
-// Get all original passwords
 exports.getAllPasswords = async (req, res) => {
   try {
-    // Check token
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -54,7 +50,6 @@ exports.getAllPasswords = async (req, res) => {
       });
     }
 
-    // Verify token
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       if (!decoded.isAdmin) {
@@ -70,7 +65,6 @@ exports.getAllPasswords = async (req, res) => {
       });
     }
 
-    // Get all password records
     const records = await OriginalPassword.find().sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -87,10 +81,8 @@ exports.getAllPasswords = async (req, res) => {
   }
 };
 
-// Delete a password record
 exports.deletePassword = async (req, res) => {
   try {
-    // Check token
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -100,7 +92,6 @@ exports.deletePassword = async (req, res) => {
       });
     }
 
-    // Verify token
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       if (!decoded.isAdmin) {
