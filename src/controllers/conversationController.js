@@ -69,8 +69,15 @@ const getConversations = async (req, res) => {
 
 const updateConversation = async (req, res) => {
   try {
+    console.log("1. UPDATE ROUTE HIT");
+    console.log("Conversation ID:", req.params.id);
+    console.log("User:", req.user);
+    console.log("Body:", req.body);
+
     const { id } = req.params;
     const { title } = req.body;
+
+    console.log("2. Checking title");
 
     if (!title || !title.trim()) {
       return res.status(400).json({
@@ -79,10 +86,14 @@ const updateConversation = async (req, res) => {
       });
     }
 
+    console.log("3. Searching conversation");
+
     const conversation = await Conversation.findOne({
       _id: id,
       user: req.user,
     });
+
+    console.log("4. Conversation found:", conversation);
 
     if (!conversation) {
       return res.status(404).json({
@@ -91,22 +102,28 @@ const updateConversation = async (req, res) => {
       });
     }
 
+    console.log("5. Updating title");
+
     conversation.title = title.trim();
-    conversation.updatedAt = new Date();
+
+    console.log("6. Saving conversation");
 
     await conversation.save();
 
-    res.status(200).json({
+    console.log("7. Conversation saved");
+
+    return res.status(200).json({
       success: true,
       message: "Conversation updated successfully!",
       conversation,
     });
   } catch (error) {
-    console.error("Update Conversation Error:", error);
+    console.error("UPDATE CONVERSATION ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error",
+      error: error.message,
     });
   }
 };

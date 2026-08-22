@@ -20,21 +20,19 @@ app.use((req, res, next) => {
   ];
 
   if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-
-    res.setHeader(
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header(
       "Access-Control-Allow-Methods",
-      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     );
-
-    res.setHeader(
+    res.header(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
     );
   }
 
   if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
+    return res.status(204).end();
   }
 
   next();
