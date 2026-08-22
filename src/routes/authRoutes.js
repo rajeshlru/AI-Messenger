@@ -4,6 +4,7 @@ const {
   registerUser,
   loginUser,
   deleteAccount,
+  changePassword,
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -14,8 +15,8 @@ router.post("/register", registerUser);
 
 router.post("/login", loginUser);
 
+router.post("/change-password", authMiddleware, changePassword);
+
 router.delete("/delete-account", authMiddleware, deleteAccount);
 
 module.exports = router;
-
-
